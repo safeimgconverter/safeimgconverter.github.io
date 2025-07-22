@@ -1,0 +1,20 @@
+{
+  "name": "Safe Image Converter",
+  "short_name": "SafeConvert",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/favicon2.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/favicon2.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
