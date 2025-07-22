@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAFE IMG CONVERTER</title>
+  
+  <meta name="author" content="CPM MALLU">
+<meta name="description" content="SafeImgConverter – A privacy-first, ad-free image converter that never uploads your images to any server. Fast, secure, and completely free.">
+<meta name="keywords" content="safe image converter, secure image converter, private image converter, image converter no ads, image converter no login, jpg to png converter, png to jpg converter, webp to jpg converter, webp to png converter, fast image converter, privacy image tool, convert images without upload, free image converter, ad-free image converter, image conversion tool, online image converter safe, convert images securely, image tool no tracking">
+<meta name="robots" content="index, follow">
+	
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head><br>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+  <h1 class="text-4xl font-bold mb-6 text-teal-500 text-center underline decoration-white decoration-[1px] underline-offset-2">
+  SafeImgConverter
+</h1><br>
+  <h6 class="text-2xl md:text-3xl font-bold text-center text-white mb-2">
+  Convert your images instantly and effortlessly
+</h6><br>
+
+
+ 
+  <div id="drop-zone" class="w-full max-w-xl h-64 border-4 border-dashed border-gray-600 rounded-2xl flex items-center justify-center text-center text-gray-400 mb-4">
+    <p>Drag or Drop image here  <small>‎(PNG, JPG, WEBP)</small></p>
+     </div>
+
+  <div class="flex flex-col items-center mb-4">
+  <div class="text-gray-500 mb-2">OR</div>
+  <div class="text-gray-500 mb-2">Multiple or single image</div>
+</div>
+
+ 
+  <input id="file-input" type="file" accept="image/png, image/jpeg, image/webp" multiple class="mb-4 hidden">
+  <div class="flex justify-center">
+  <button onclick="document.getElementById('file-input').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full mb-6 cursor-pointer">
+    Select Images
+  </button>
+</div>
+
+  
+  <div class="flex justify-center">
+  <select id="format" class="mb-4 px-4 py-2 rounded bg-gray-800 text-white border border-gray-700">
+    <option value="jpeg">Convert to JPG</option>
+    <option value="png">Convert to PNG</option>
+    <option value="webp">Convert to WEBP</option>
+    <option value="pdf">Convert to PDF</option>
+  </select>
+</div>
+
+  <div class="flex justify-center">
+  <button onclick="convertImages()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full cursor-pointer">
+    Convert
+  </button>
+</div>
+
+  <div id="preview" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-3xl"></div>
+
+  <script>
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  let filesToConvert = [];
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('border-blue-400');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('border-blue-400');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-blue-400');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener('change', () => {
+    handleFiles(fileInput.files);
+  });
+
+  function handleFiles(files) {
+  const validTypes = ['image/png', 'image/jpeg', 'image/webp'];
+  filesToConvert = [...files].filter(file => validTypes.includes(file.type));
+
+  if (filesToConvert.length === 0) {
+    document.getElementById('preview').innerHTML = `
+      <p class="text-red-500 font-semibold mb-4">Invalid file type selected. Please upload only PNG, JPG, or WEBP images.</p>`;
+    return;
+  }
+
+  document.getElementById('preview').innerHTML = `
+    <p class="text-gray-400">Ready to convert ${filesToConvert.length} image(s)</p>
+    <div class="text-gray-400 mb-2">Images Selected:</div>
+    <ul class="mb-4 space-y-1">
+      ${filesToConvert.map((file) => `<li class="text-gray-500 text-sm">${file.name}</li>`).join('')}
+    </ul>`;
+}
+
+  async function convertImages() {
+  const format = document.getElementById('format').value;
+
+  if (filesToConvert.length === 0) {
+    const preview = document.getElementById('preview');
+    preview.innerHTML = '<div class="text-red-500 font-semibold mb-4">No images selected. Please upload or drag some images first.</div>';
+    return;
+  }
+
+  
+  if (format === 'pdf') {
+    const preview = document.getElementById('preview');
+    preview.innerHTML = '';
+    const statusDiv = document.createElement('div');
+    statusDiv.id = 'conversion-status';
+    statusDiv.className = 'text-yellow-400 animate-pulse mb-4';
+    statusDiv.innerText = 'Generating PDF, please wait...';
+    preview.appendChild(statusDiv);
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    let added = false;
+
+    let loadedImages = 0;
+
+    filesToConvert.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+          const width = pdf.internal.pageSize.getWidth();
+          const height = (img.height * width) / img.width;
+
+          if (added) pdf.addPage();
+          pdf.addImage(img, 'PNG', 0, 0, width, height);
+          added = true;
+          loadedImages++;
+
+          if (loadedImages === filesToConvert.length) {
+            pdf.save('converted.pdf');
+            const status = document.getElementById('conversion-status');
+            if (status) {
+              status.className = 'text-green-400 font-semibold mb-4';
+              status.innerText = 'Converted to PDF successfully!';
+            }
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    return; 
+  }
+
+  const preview = document.getElementById('preview');
+  preview.innerHTML = '';
+  const statusDiv = document.createElement('div');
+  statusDiv.id = 'conversion-status';
+  statusDiv.className = 'text-yellow-400 animate-pulse mb-4';
+  statusDiv.innerText = 'Converting images, please wait...';
+  preview.appendChild(statusDiv);
+  let successCount = 0;
+
+  for (const file of filesToConvert) {
+    const options = {
+      fileType: 'image/' + format,
+      initialQuality: 1,
+      maxWidthOrHeight: 2000
+    };
+
+    try {
+      const compressedBlob = await imageCompression(file, options);
+      const url = URL.createObjectURL(compressedBlob);
+
+      const div = document.createElement('div');
+      div.className = "bg-gray-800 p-4 rounded-xl shadow-md flex flex-col items-center mb-4";
+
+      div.innerHTML = `
+        <img src="${url}" class="w-full h-48 object-contain mb-2 rounded-lg" />
+        <p class="text-gray-400 mb-2 text-sm">${file.name.replace(/\.[^/.]+$/, '')}.${format}</p>
+        <a href="${url}" download="${file.name.replace(/\.[^/.]+$/, '')}.${format}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded">Download</a>
+      `;
+
+      preview.appendChild(div);
+      successCount++;
+    } catch (err) {
+      preview.innerHTML += `<p class="text-red-500">Error converting ${file.name}: ${err.message}</p>`;
+    }
+  }
+
+  const status = document.getElementById('conversion-status');
+  if (status) {
+    status.classList.remove('animate-pulse');
+    if (successCount === filesToConvert.length) {
+      status.className = 'text-green-400 font-semibold mb-4';
+      status.innerText = 'Converted successfully!';
+    } else if (successCount === 0) {
+      status.className = 'text-red-500 font-semibold mb-4';
+      status.innerText = 'Conversion failed for all selected files.';
+    } else {
+      status.className = 'text-yellow-400 font-semibold mb-4';
+      status.innerText = `Some images converted successfully (${successCount}/${filesToConvert.length}).`;
+    }
+  }
+}
+
+</script>
+
+<div class="flex justify-center mt-6">
+  <a href="https://cpmmallu-ux.github.io" target="_blank"
+     class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-300 cursor-pointer">
+    Visit the Creator’s Projects
+  </a>
+</div>
+
+<footer style="text-align:center; font-size:14px; padding: 15px 10px; opacity: 0.7;">
+  © 2025 SafeImgConverter • Open Source under <a href="https://opensource.org/licenses/MIT" target="_blank" style="color:inherit; text-decoration:underline;">MIT License</a> • Hosted on <a href="https://github.com" target="_blank" style="color:inherit; text-decoration:underline;">GitHub Pages</a>
+</footer>
+
+</body>
+</html>
