@@ -230,7 +230,13 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 </script>	
-
+	
+<div class="flex justify-center mt-4">
+  <button id="installAppBtn" style="display:none;" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full cursor-pointer">
+    Install App
+  </button>
+</div>
+	
 <div class="flex justify-center mt-6">
   <a href="https://cpmmallu-ux.github.io" target="_blank"
      class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-xl shadow-md transition duration-300 cursor-pointer">
@@ -246,6 +252,34 @@
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
   }
+</script>
+
+<script>
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    
+    e.preventDefault();
+    deferredPrompt = e;
+
+
+    const installBtn = document.getElementById("installAppBtn");
+    installBtn.style.display = "block";
+
+    installBtn.addEventListener('click', () => {
+      installBtn.style.display = "none"; 
+      deferredPrompt.prompt(); 
+
+      deferredPrompt.userChoice.then((choiceResult) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('App installed');
+        } else {
+          console.log('App dismissed');
+        }
+        deferredPrompt = null;
+      });
+    });
+  });
 </script>
 </body>
 </html>
